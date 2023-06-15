@@ -5,7 +5,13 @@ import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.exceptions.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -23,6 +29,7 @@ public class FilmController {
     private final Map<Long, Film> films = new HashMap<>();
 
     public void save(Film film) {
+        log.debug("+ save: {}", film);
         films.put(film.getId(), film);
     }
 
@@ -47,9 +54,7 @@ public class FilmController {
     public Film create(@Valid @RequestBody Film film) {
         log.debug("+ create: {}", film);
         film.generateId(films);
-        log.info("Добавление фильма '" + film.getName() + "': {}", film);
         save(film);
-        log.info("Фильм '" + film.getName() + "' - создан: {}", film);
         log.debug("+ create: {}", film);
         return film;
     }
@@ -58,9 +63,7 @@ public class FilmController {
     public Film put(@Valid @RequestBody Film film) {
         log.debug("+ put: {}", film);
         checkId(film);
-        log.info("Обновление данных фильма '" + film.getName() + "': {}", film);
         save(film);
-        log.info("Данные фильма '" + film.getName() + "' - обновлены: {}", film);
         log.debug("+ put: {}", film);
         return film;
     }

@@ -4,13 +4,19 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Past;
 
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import ru.yandex.practicum.filmorate.validator.LoginConstraint;
 
 import java.time.LocalDate;
 import java.util.Map;
 
-@Data
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode
 public class User {
     private long id = 0;
     @Email(message = "Некорректный адрес электронной почты.")
