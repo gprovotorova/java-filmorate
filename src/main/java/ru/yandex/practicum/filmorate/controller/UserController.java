@@ -5,7 +5,6 @@ import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -94,7 +93,7 @@ public class UserController {
         log.debug("+ deleteFriend: {}", friend);
     }
 
-    @GetMapping(value = "/users/{id}/friends", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/users/{id}/friends")
     public List<User> getFriends(@PathVariable("id") String userId) {
         User user = userService.getById(Integer.parseInt(userId));
         log.debug("+ getFriends: {}", user);
@@ -103,7 +102,7 @@ public class UserController {
         return friends;
     }
 
-    @GetMapping(value = "/users/{id}/friends/common/{otherId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/users/{id}/friends/common/{otherId}")
     public List<User> getCommonFriends(@PathVariable("id") String userId, @PathVariable("otherId") String friendId) {
         User user = userService.getById(Integer.parseInt(userId));
         User friend = userService.getById(Integer.parseInt(friendId));
