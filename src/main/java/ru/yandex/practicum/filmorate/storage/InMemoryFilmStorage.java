@@ -32,20 +32,17 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     public Optional<Film> save(Optional<Film> film) {
         film.get().setId(++id);
-        log.debug("+ save: {}", film);
         films.put(film.get().getId(), film.get());
         return film;
     }
 
     public Optional<Film> update(Optional<Film> film) {
-        log.debug("+ update: {}", film);
         checkId(film);
         films.put(film.get().getId(), film.get());
         return film;
     }
 
     public void delete(Optional<Film> film) {
-        log.debug("+ delete: {}", film);
         films.remove(film.get().getId());
     }
 

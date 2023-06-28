@@ -14,18 +14,18 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidationException(final ValidationException e) {
-        return new ErrorResponse("error: ", e.getMessage());
+        return new ErrorResponse("error", e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFoundException(final NotFoundException e) {
-        return new ErrorResponse("error: ", e.getMessage());
+        return new ErrorResponse("error", e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleInternalServerErrorException(final InternalServerErrorException e) {
-        return new ErrorResponse("error: ", e.getMessage());
+        return new ErrorResponse("error", e.getMessage());
     }
 }

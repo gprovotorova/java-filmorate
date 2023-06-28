@@ -24,14 +24,12 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public Optional<User> save(Optional<User> user) {
         user.get().setId(++id);
-        log.debug("+ save: {}", user);
         users.put(user.get().getId(), user.get());
         return user;
     }
 
     @Override
     public Optional<User> update(Optional<User> user) {
-        log.debug("+ update: {}", user);
         checkId(user.get());
         users.replace(user.get().getId(), user.get());
         return user;
@@ -39,7 +37,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public void delete(Optional<User> user) {
-        log.debug("+ delete: {}", user);
         users.remove(user.get().getId());
     }
 
