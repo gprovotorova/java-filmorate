@@ -6,7 +6,7 @@ import ru.yandex.practicum.filmorate.model.User;
 @Component
 public class ValidateService {
     public void userNameValidation(User user) {
-        if (user.getName() == null) {
+        if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
     }

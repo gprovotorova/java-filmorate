@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Data
 public class Film {
-    private long id = 0;
+    private long id;
     @NotBlank(message = "Название фильма не может быть пустым.")
     private final String name;
     @Size(max = 200, message = "Максимальная длина описания фильма — 200 символов.")
@@ -22,12 +22,4 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть положительной.")
     private final double duration;
 
-    public long setId() {
-        return ++id;
-    }
-
-    public void generateId(Map<Long, Film> films) {
-        id = films.size();
-        setId();
-    }
 }
