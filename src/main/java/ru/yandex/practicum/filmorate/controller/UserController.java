@@ -54,18 +54,18 @@ public class UserController {
     public User create(@RequestBody @Valid User user) {
         log.debug("+ create: {}", user);
         validateService.userNameValidation(user);
-        userService.saveUser(user);
-        log.debug("+ create: {}", user);
-        return user;
+        User savedUser = userService.saveUser(user);
+        log.debug("+ create: {}", savedUser);
+        return savedUser;
     }
 
     @PutMapping
     public User put(@RequestBody @Valid User user) {
         log.debug("+ put: {}", user);
         validateService.userNameValidation(user);
-        User saved = userService.updateUser(user);
-        log.debug("+ put: {}", user);
-        return saved;
+        User savedUser = userService.updateUser(user);
+        log.debug("+ put: {}", savedUser);
+        return savedUser;
     }
 
     @DeleteMapping("/{userId}")
@@ -95,8 +95,8 @@ public class UserController {
     }
 
     @GetMapping(value = "/{id}/friends")
-    public List<User> getFriends(@PathVariable("id") String userId) {
-        User user = userService.getById(Integer.parseInt(userId));
+    public List<User> getFriends(@PathVariable("id") int userId) {
+        User user = userService.getById(userId);
         log.debug("+ getFriends: {}", user);
         List<User> friends = userService.getFriends(user);
         log.debug("+ getFriends: {}", userService.getFriends(user));
@@ -104,9 +104,9 @@ public class UserController {
     }
 
     @GetMapping(value = "/{id}/friends/common/{otherId}")
-    public List<User> getCommonFriends(@PathVariable("id") String userId, @PathVariable("otherId") String friendId) {
-        User user = userService.getById(Integer.parseInt(userId));
-        User friend = userService.getById(Integer.parseInt(friendId));
+    public List<User> getCommonFriends(@PathVariable("id") int userId, @PathVariable("otherId") int friendId) {
+        User user = userService.getById(userId);
+        User friend = userService.getById(friendId);
         log.debug("+ getCommonFriends: {} and {}", user, friend);
         List<User> commonFriends = userService.getAllCommonFriends(user, friend);
         log.debug("+ getCommonFriends: {}", userService.getAllCommonFriends(user, friend));

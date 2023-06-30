@@ -20,5 +20,8 @@ public class Film {
     private final LocalDate releaseDate;
     @Positive(message = "Продолжительность фильма должна быть положительной.")
     private final double duration;
-
+    @NotBlank(message = "Жанр фильма не может быть пустым.")
+    private final Genre genre;
+    @NotBlank(message = "Жанр фильма не может быть пустым.")
+    private final MotionPictureAssociation mpa;
 }

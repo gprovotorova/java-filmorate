@@ -53,19 +53,19 @@ public class FilmController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Film create(@Valid @RequestBody Film film) {
+    public Film create(@RequestBody @Valid Film film) {
         log.debug("+ create: {}", film);
-        Film saved = filmService.saveFilm(film);
-        log.debug("+ create: {}", film);
-        return saved;
+        Film savedFilm = filmService.saveFilm(film);
+        log.debug("+ create: {}", savedFilm);
+        return savedFilm;
     }
 
     @PutMapping
-    public Film put(@Valid @RequestBody Film film) {
+    public Film put(@RequestBody @Valid Film film) {
         log.debug("+ put: {}", film);
-        Film saved = filmService.updateFilm(film);
-        log.debug("+ put: {}", film);
-        return saved;
+        Film savedFilm = filmService.updateFilm(film);
+        log.debug("+ put: {}", savedFilm);
+        return savedFilm;
     }
 
     @DeleteMapping("/{filmId}")

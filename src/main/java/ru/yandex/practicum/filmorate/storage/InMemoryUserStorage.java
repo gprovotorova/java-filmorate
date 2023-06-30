@@ -19,6 +19,7 @@ public class InMemoryUserStorage implements UserStorage {
     private long id = 0;
     public final Map<Long, User> users = new HashMap<>();
     public Map<Long, Set<Long>> userFriendsIds = new HashMap<>();
+    private final Boolean friendshipStatusIsConfirmed = false;
 
     @Override
     public Optional<User> save(Optional<User> user) {
@@ -42,10 +43,7 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public Optional<User> getById(long userId) {
         User user = users.get(userId);
-        if (user == null) {
-            throw new NotFoundException("Пользователя с таким id не существует.");
-        }
-        return Optional.of(user);
+        return Optional.ofNullable(user);
     }
 
     @Override

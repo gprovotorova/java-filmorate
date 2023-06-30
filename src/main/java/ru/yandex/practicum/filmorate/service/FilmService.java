@@ -33,10 +33,7 @@ public class FilmService {
     }
 
     public Film getById(long filmId) {
-        final Film film = filmStorage.getById(filmId).get();
-        if (film == null) {
-            throw new NotFoundException("Фильм с id " + filmId + " не найден");
-        }
+        final Film film = filmStorage.getById(filmId).orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
         return film;
     }
 
