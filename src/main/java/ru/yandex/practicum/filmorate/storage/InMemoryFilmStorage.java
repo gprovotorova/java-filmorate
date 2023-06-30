@@ -7,10 +7,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -77,13 +75,6 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public List<Film> getTopFilms(int count) {
         Map<Film, Long> filmLikes = new HashMap<>();
-        /*if(filmUsersLikes.isEmpty()) {
-            for (Film film : films.values()) {
-                filmLikes.put(film, 0L);
-            }
-            return new ArrayList<>(filmLikes.keySet().stream().collect(Collectors.toList()));
-        }
-         */
         for (long filmId : filmUsersLikes.keySet()) {
             filmLikes.put(getById(filmId).get(), Long.valueOf(getLikes(getById(filmId)).size()));
         }
