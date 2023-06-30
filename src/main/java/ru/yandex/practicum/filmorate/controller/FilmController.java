@@ -5,7 +5,6 @@ import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,7 +42,7 @@ public class FilmController {
     @GetMapping
     public List<Film> getFilms() {
         log.debug("+ getFilms {}", filmService.getAllFilms().size());
-        return new ArrayList<>(filmService.getAllFilms().size());
+        return new ArrayList<>(filmService.getAllFilms());
     }
 
     @GetMapping("/{filmId}")
@@ -95,18 +94,11 @@ public class FilmController {
         log.debug("+ deleteLike: {}", film);
     }
 
-    @GetMapping(value = {"/films/popular?count={count}", "/films/popular"}, produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<Film> getTopFilms(@RequestParam(value = "count", defaultValue = "10", required = false) String count) {
-        List<Film> topFilms;
-        if (count != null) {
-            log.debug("+ getTopFilms: {}", count);
-            topFilms = filmService.getTopFilms(Integer.parseInt(count));
-            log.debug("+ getTopFilms: {}", count);
-        } else {
-            log.debug("+ getTopFilms: {}", getFilms().size());
-            topFilms = filmService.getTopFilms(getFilms().size());
-            log.debug("+ getTopFilms: {}", getFilms().size());
-        }
+    @GetMapping(value = {"/popular?count={count}", "/popular"})
+    public List<Film> getTopFilms(@RequestParam(value = "count", required = false, defaultValue = "10") int count) {
+        log.debug("+ getTopFilms: {}", getFilms().size());
+        List<Film> topFilms = filmService.getTopFilms(count);
+        log.debug("+ getTopFilms: {}", getFilms().size());
         return topFilms;
     }
 }

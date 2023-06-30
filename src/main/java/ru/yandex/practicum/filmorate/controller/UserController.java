@@ -26,6 +26,7 @@ import java.util.List;
 @RequestMapping("/users")
 @Validated
 public class UserController {
+
     @Autowired
     private ValidateService validateService;
 
@@ -93,7 +94,7 @@ public class UserController {
         log.debug("+ deleteFriend: {}", friend);
     }
 
-    @GetMapping(value = "/users/{id}/friends")
+    @GetMapping(value = "/{id}/friends")
     public List<User> getFriends(@PathVariable("id") String userId) {
         User user = userService.getById(Integer.parseInt(userId));
         log.debug("+ getFriends: {}", user);
@@ -102,7 +103,7 @@ public class UserController {
         return friends;
     }
 
-    @GetMapping(value = "/users/{id}/friends/common/{otherId}")
+    @GetMapping(value = "/{id}/friends/common/{otherId}")
     public List<User> getCommonFriends(@PathVariable("id") String userId, @PathVariable("otherId") String friendId) {
         User user = userService.getById(Integer.parseInt(userId));
         User friend = userService.getById(Integer.parseInt(friendId));

@@ -7,8 +7,10 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -20,8 +22,9 @@ import java.util.stream.Collectors;
 public class InMemoryFilmStorage implements FilmStorage {
     private long id = 0;
     public final Map<Long, Film> films = new HashMap<>();
-    public Map<Film, Set<Optional<User>>> filmUsersLikes = new HashMap<>();
+    public Map<Long, Set<Long>> filmUsersLikes = new HashMap<>();
 
+    @Override
     public Optional<Film> getById(long filmId) {
         Film film = films.get(filmId);
         if (film == null) {
@@ -30,20 +33,71 @@ public class InMemoryFilmStorage implements FilmStorage {
         return Optional.of(film);
     }
 
+    @Override
     public Optional<Film> save(Optional<Film> film) {
         film.get().setId(++id);
         films.put(film.get().getId(), film.get());
+        filmUsersLikes.put(film.get().getId(), getLikes(film));
         return film;
     }
 
+    private Set<Long> getLikes(Optional<Film> film) {
+        Set<Long> filmLikes = filmUsersLikes.computeIfAbsent(film.get().getId(), id -> new HashSet<>());
+        return filmLikes;
+    }
+
+    @Override
     public Optional<Film> update(Optional<Film> film) {
         checkId(film);
         films.put(film.get().getId(), film.get());
+        filmUsersLikes.replace(film.get().getId(), getLikes(film));
         return film;
     }
 
+    @Override
     public void delete(Optional<Film> film) {
         films.remove(film.get().getId());
+        filmUsersLikes.remove(film.get().getId(), getLikes(film));
+    }
+
+    @Override
+    public void addLike(Optional<User> user, Optional<Film> film) {
+        Set<Long> filmLikes = filmUsersLikes.computeIfAbsent(film.get().getId(), id -> new HashSet<>());
+        filmLikes.add(user.get().getId());
+        filmUsersLikes.replace(film.get().getId(), filmLikes);
+    }
+
+    @Override
+    public void deleteLike(Optional<User> user, Optional<Film> film) {
+        Set<Long> filmLikes = filmUsersLikes.computeIfAbsent(film.get().getId(), id -> new HashSet<>());
+        filmLikes.remove(user.get().getId());
+        filmUsersLikes.replace(film.get().getId(), filmLikes);
+    }
+
+    @Override
+    public List<Film> getTopFilms(int count) {
+        Map<Film, Long> filmLikes = new HashMap<>();
+        /*if(filmUsersLikes.isEmpty()) {
+            for (Film film : films.values()) {
+                filmLikes.put(film, 0L);
+            }
+            return new ArrayList<>(filmLikes.keySet().stream().collect(Collectors.toList()));
+        }
+         */
+        for (long filmId : filmUsersLikes.keySet()) {
+            filmLikes.put(getById(filmId).get(), Long.valueOf(getLikes(getById(filmId)).size()));
+        }
+        List<Film> sortedFilms = filmLikes.entrySet().stream()
+                .sorted(Map.Entry.<Film, Long>comparingByValue().reversed())
+                .map(Map.Entry::getKey)
+                .limit(count)
+                .collect(Collectors.toList());
+        return sortedFilms;
+    }
+
+    @Override
+    public List<Film> getAllFilms() {
+        return new ArrayList<>(films.values());
     }
 
     public void checkId(Optional<Film> film) {
@@ -53,36 +107,5 @@ public class InMemoryFilmStorage implements FilmStorage {
             }
         }
         throw new NotFoundException("Такого фильма пока нет в нашей фильмотеке.");
-    }
-
-    public void addLike(Optional<User> user, Optional<Film> film) {
-        Set<Optional<User>> filmLikes = new HashSet<>();
-        filmLikes.add(user);
-        filmUsersLikes.put(film.get(), filmLikes);
-    }
-
-    public List<Film> getTopFilms(int count) {
-        Map<Film, Long> filmLikes = new HashMap<>();
-        for (Film film : filmUsersLikes.keySet()) {
-            filmLikes.put(film, Long.valueOf(filmUsersLikes.get(film).size()));
-        }
-        Map<Film, Long> topTenFilms =
-                filmLikes.entrySet().stream()
-                        .sorted(Map.Entry.<Film, Long>comparingByValue().reversed())
-                        .limit(count)
-                        .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
-
-        return new ArrayList<>(topTenFilms.keySet().stream().collect(Collectors.toList()));
-    }
-
-    @Override
-    public void deleteLike(Optional<User> user, Optional<Film> film) {
-        Set<Optional<User>> filmLikes = filmUsersLikes.get(film);
-        filmLikes.remove(user);
-        filmUsersLikes.put(film.get(), filmLikes);
-    }
-
-    public List<Film> getAllFilms() {
-        return new ArrayList<>(films.values());
     }
 }

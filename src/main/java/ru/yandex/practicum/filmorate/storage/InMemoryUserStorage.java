@@ -12,14 +12,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Component
 @Slf4j
 public class InMemoryUserStorage implements UserStorage {
     private long id = 0;
     public final Map<Long, User> users = new HashMap<>();
-    public Map<Long, Set<User>> userFriendsIds = new HashMap<>();
+    public Map<Long, Set<Long>> userFriendsIds = new HashMap<>();
 
     @Override
     public Optional<User> save(Optional<User> user) {
@@ -49,35 +48,27 @@ public class InMemoryUserStorage implements UserStorage {
         return Optional.of(user);
     }
 
-    public void checkId(User user) {
-        for (Long id : users.keySet()) {
-            if (id == user.getId()) {
-                return;
-            }
-        }
-        throw new NotFoundException("Пользователя с таким id не существует.");
-    }
-
+    @Override
     public List<User> getAllUsers() {
         return new ArrayList<>(users.values());
     }
 
     @Override
     public void addFriend(Optional<User> user, Optional<User> friend) {
-        Set<User> userFriendIds = userFriendsIds.computeIfAbsent(user.get().getId(), id -> new HashSet<>());
-        userFriendIds.add(friend.get());
+        Set<Long> userFriendIds = userFriendsIds.computeIfAbsent(user.get().getId(), id -> new HashSet<>());
+        userFriendIds.add(friend.get().getId());
 
-        Set<User> friendFriendIds = userFriendsIds.computeIfAbsent(friend.get().getId(), id -> new HashSet<>());
-        friendFriendIds.add(user.get());
+        Set<Long> friendFriendIds = userFriendsIds.computeIfAbsent(friend.get().getId(), id -> new HashSet<>());
+        friendFriendIds.add(user.get().getId());
     }
 
     @Override
     public void deleteFriend(Optional<User> user, Optional<User> friend) {
-        Set<User> userFriendIds = userFriendsIds.computeIfAbsent(user.get().getId(), id -> new HashSet<>());
-        userFriendIds.remove(friend.get());
+        Set<Long> userFriendIds = userFriendsIds.computeIfAbsent(user.get().getId(), id -> new HashSet<>());
+        userFriendIds.remove(friend.get().getId());
 
-        Set<User> friendFriendIds = userFriendsIds.computeIfAbsent(friend.get().getId(), id -> new HashSet<>());
-        friendFriendIds.remove(user.get());
+        Set<Long> friendFriendIds = userFriendsIds.computeIfAbsent(friend.get().getId(), id -> new HashSet<>());
+        friendFriendIds.remove(user.get().getId());
     }
 
     @Override
@@ -98,7 +89,23 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public List<User> getFriends(Optional<User> user) {
-        Set<User> userFriendIds = userFriendsIds.computeIfAbsent(user.get().getId(), id -> new HashSet<>());
-        return new ArrayList<>(userFriendIds.stream().collect(Collectors.toList()));
+        Set<Long> userFriends = userFriendsIds.get(user.get().getId());
+        List<User> friends = new ArrayList<>();
+        if (userFriends == null) {
+            return friends;
+        }
+        for (Long friendId : userFriends) {
+            friends.add(users.get(friendId));
+        }
+        return friends;
+    }
+
+    public void checkId(User user) {
+        for (Long id : users.keySet()) {
+            if (id == user.getId()) {
+                return;
+            }
+        }
+        throw new NotFoundException("Пользователя с таким id не существует.");
     }
 }
