@@ -20,8 +20,15 @@ public class Film {
     private final LocalDate releaseDate;
     @Positive(message = "Продолжительность фильма должна быть положительной.")
     private final double duration;
-    @NotBlank(message = "Жанр фильма не может быть пустым.")
-    private final Genre genre;
-    @NotBlank(message = "Жанр фильма не может быть пустым.")
-    private final MotionPictureAssociation mpa;
+    private Genre genre;
+    private MotionPictureAssociation mpa;
+
+    public Film(String name, String description, LocalDate releaseDate, double duration, Genre genre, MotionPictureAssociation mpa) {
+        this.name = name;
+        this.description = description;
+        this.releaseDate = releaseDate;
+        this.duration = duration;
+        this.genre = genre;
+        this.mpa = mpa;
+    }
 }
