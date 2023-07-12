@@ -25,7 +25,7 @@ class FilmTest {
     @DisplayName("проверка названия фильма на пустоту")
     @Test
     void testFilmNameValidation() {
-        Film film = new Film("", "Шедевр Хаяо Миядзаки.", LocalDate.of(2001, 7, 20), 125d);
+        Film film = new Film("", "Шедевр Хаяо Миядзаки.", LocalDate.of(2001, 7, 20), 125, Genre.ANIMATED, MotionPictureAssociation.PG);
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertEquals(1, violations.size(), "Название фильма не может быть пустым.");
@@ -34,7 +34,7 @@ class FilmTest {
     @DisplayName("проверка длины описания фильма")
     @Test
     void testDescriptionValidation() {
-        Film film = new Film("Унесённые призраками", DESCRIPTION_FOR_CHECK, LocalDate.of(2001, 7, 20), 125d);
+        Film film = new Film("Унесённые призраками", DESCRIPTION_FOR_CHECK, LocalDate.of(2001, 7, 20), 125d, Genre.ANIMATED, MotionPictureAssociation.PG);
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertEquals(1, violations.size(), "Максимальная длина описания фильма — 200 символов.");
@@ -43,7 +43,7 @@ class FilmTest {
     @DisplayName("проверка даты релиза фильма")
     @Test
     void testReleaseDateValidation() {
-        Film film = new Film("Унесённые призраками", "Шедевр Хаяо Миядзаки.", LocalDate.of(1800, 7, 20), 125d);
+        Film film = new Film("Унесённые призраками", "Шедевр Хаяо Миядзаки.", LocalDate.of(1800, 7, 20), 125d, Genre.ANIMATED, MotionPictureAssociation.PG);
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertEquals(1, violations.size(), "Дата релиза фильма не может быть раньше 28 декабря 1895 года.");
@@ -52,7 +52,7 @@ class FilmTest {
     @DisplayName("проверка продолжительности фильма")
     @Test
     void testDurationValidation() {
-        Film film = new Film("Унесённые призраками", "Шедевр Хаяо Миядзаки.", LocalDate.of(2001, 7, 20), -125d);
+        Film film = new Film("Унесённые призраками", "Шедевр Хаяо Миядзаки.", LocalDate.of(2001, 7, 20), -125d, Genre.ANIMATED, MotionPictureAssociation.PG);
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertEquals(1, violations.size(), "Продолжительность фильма должна быть положительной.");

@@ -8,11 +8,10 @@ import lombok.Data;
 import ru.yandex.practicum.filmorate.validator.ReleaseDateConstraint;
 
 import java.time.LocalDate;
-import java.util.Map;
 
 @Data
 public class Film {
-    private long id = 0;
+    private long id;
     @NotBlank(message = "Название фильма не может быть пустым.")
     private final String name;
     @Size(max = 200, message = "Максимальная длина описания фильма — 200 символов.")
@@ -21,13 +20,15 @@ public class Film {
     private final LocalDate releaseDate;
     @Positive(message = "Продолжительность фильма должна быть положительной.")
     private final double duration;
+    private Genre genre;
+    private MotionPictureAssociation mpa;
 
-    public long setId() {
-        return ++id;
-    }
-
-    public void generateId(Map<Long, Film> films) {
-        id = films.size();
-        setId();
+    public Film(String name, String description, LocalDate releaseDate, double duration, Genre genre, MotionPictureAssociation mpa) {
+        this.name = name;
+        this.description = description;
+        this.releaseDate = releaseDate;
+        this.duration = duration;
+        this.genre = genre;
+        this.mpa = mpa;
     }
 }
