@@ -4,6 +4,7 @@ import javax.validation.Valid;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,6 +31,7 @@ public class UserController {
     @Autowired
     private ValidateService validateService;
 
+    @Qualifier("userService")
     private final UserService userService;
 
     @Autowired
@@ -63,6 +65,7 @@ public class UserController {
     public User put(@RequestBody @Valid User user) {
         log.debug("+ put: {}", user);
         validateService.userNameValidation(user);
+        userService.getById(user.getId());
         User savedUser = userService.updateUser(user);
         log.debug("+ put: {}", savedUser);
         return savedUser;
@@ -77,7 +80,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public void putFriend(@PathVariable("id") int userId, @PathVariable("friendId") int friendId) {
+    public void addFriend(@PathVariable("id") int userId, @PathVariable("friendId") int friendId) {
         User user = userService.getById(userId);
         User friend = userService.getById(friendId);
         log.debug("+ putFriend: {}", friend);

@@ -4,6 +4,7 @@ import javax.validation.Valid;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,8 +22,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @Slf4j
@@ -30,7 +30,9 @@ import java.util.List;
 @Validated
 public class FilmController {
 
+    @Qualifier("filmService")
     private final FilmService filmService;
+    @Qualifier("userService")
     private final UserService userService;
 
     @Autowired
@@ -53,9 +55,9 @@ public class FilmController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Film create(@RequestBody @Valid Film film) {
+    public Optional<Film> create(@RequestBody @Valid Film film) {
         log.debug("+ create: {}", film);
-        Film savedFilm = filmService.saveFilm(film);
+        Optional<Film> savedFilm = filmService.saveFilm(film);
         log.debug("+ create: {}", savedFilm);
         return savedFilm;
     }
@@ -63,6 +65,7 @@ public class FilmController {
     @PutMapping
     public Film put(@RequestBody @Valid Film film) {
         log.debug("+ put: {}", film);
+        filmService.getById(film.getId());
         Film savedFilm = filmService.updateFilm(film);
         log.debug("+ put: {}", savedFilm);
         return savedFilm;

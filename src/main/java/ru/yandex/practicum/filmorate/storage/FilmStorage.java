@@ -22,6 +22,4 @@ public interface FilmStorage {
     void deleteLike(Optional<User> user, Optional<Film> film);
 
     void addLike(Optional<User> user, Optional<Film> film);
-
-
 }
