@@ -4,7 +4,11 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Past;
 
-import lombok.*;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import ru.yandex.practicum.filmorate.validator.LoginConstraint;
 
 import java.time.LocalDate;

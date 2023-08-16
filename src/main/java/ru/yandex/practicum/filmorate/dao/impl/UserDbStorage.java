@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.dao;
+package ru.yandex.practicum.filmorate.dao.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -9,61 +9,75 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.dao.UserStorage;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
 
 @Component("userDbStorage")
 @RequiredArgsConstructor
 public class UserDbStorage implements UserStorage {
+    private static final String INSERT_INTO = "insert into users (email, login, user_name, birthday) " +
+            "values (:email, :login, :user_name, :birthday)";
+    private static final String UPDATE = "update users set email = :email, login = :login, user_name = :user_name, " +
+            "birthday = :birthday where user_id = :user_id";
+    private static final String DELETE = "delete from users where user_id = :user_id";
+    private static final String SELECT_BY_ID = "select user_id, email, login, user_name, birthday " +
+            "from users where user_id = :user_id";
+    private static final String SELECT_ALL = "select user_id, email, login, user_name, birthday from users";
+
+    private static final String INSERT_INTO_FRIEND = "insert into friends (user_id, friend_id) " +
+            "values (:user_id, :friend_id)";
+    private static final String DELETE_FRIEND = "delete from friends where user_id = :user_id and friend_id = :friend_id";
+    private static final String SELECT_COMMON_FRIENDS = "select u.user_id, u.email, u.login, u.user_name, u.birthday " +
+            "from users as u inner join friends as f1 on u.user_id = f1.friend_id and f1.user_id = :user_id " +
+            "inner join friends as f2 on u.user_id = f2.friend_id and f2.user_id = :friend_id";
+    private static final String SELECT_FRIENDS = "select u.user_id, u.email, u.login, u.user_name, u.birthday " +
+            "from users as u inner join friends as f on u.user_id = f.friend_id and f.user_id = :user_id";
+
     private final Logger log = LoggerFactory.getLogger(UserDbStorage.class);
 
     private final NamedParameterJdbcOperations jdbcOperations;
 
     @Override
     public Optional<User> save(Optional<User> user) {
-        String sqlQuery = "insert into users (email, login, user_name, birthday) " +
-                "values (:email, :login, :user_name, :birthday)";
-
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource map = new MapSqlParameterSource();
         map.addValue("email", user.get().getEmail());
         map.addValue("login", user.get().getLogin());
         map.addValue("user_name", user.get().getName());
         map.addValue("birthday", user.get().getBirthday());
-        jdbcOperations.update(sqlQuery, map, keyHolder);
+        jdbcOperations.update(INSERT_INTO, map, keyHolder);
         user.get().setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
         return user;
     }
 
     @Override
     public Optional<User> update(Optional<User> user) {
-        String sqlQuery = ("update users set email = :email, login = :login, user_name = :user_name, birthday = :birthday " +
-                "where user_id = :user_id");
-
         MapSqlParameterSource map = new MapSqlParameterSource();
         map.addValue("user_id", user.get().getId());
         map.addValue("email", user.get().getEmail());
         map.addValue("login", user.get().getLogin());
         map.addValue("user_name", user.get().getName());
         map.addValue("birthday", user.get().getBirthday());
-        jdbcOperations.update(sqlQuery, map);
+        jdbcOperations.update(UPDATE, map);
         return user;
     }
 
     @Override
     public void delete(Optional<User> user) {
-        String sqlQuery = "delete from users where user_id = :user_id";
-        jdbcOperations.update(sqlQuery, Map.of("user_id", user.get().getId()));
+        jdbcOperations.update(DELETE, Map.of("user_id", user.get().getId()));
     }
 
     @Override
     public Optional<User> getById(long id) {
-        final String sql = "select user_id, email, login, user_name, birthday from users where user_id = :user_id";
-        final List<User> users = jdbcOperations.query(sql, Map.of("user_id", id), new UserRowMapper());
+        final List<User> users = jdbcOperations.query(SELECT_BY_ID, Map.of("user_id", id), new UserRowMapper());
         if (users.size() != 1 || users.isEmpty()) {
             log.info("Пользователь с идентификатором {} не найден.", id);
             return Optional.empty();
@@ -73,54 +87,38 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> getAllUsers() {
-        final String sqlQuery = "select user_id, email, login, user_name, birthday from users";
-        return jdbcOperations.query(sqlQuery, new UserRowMapper());
+        return jdbcOperations.query(SELECT_ALL, new UserRowMapper());
     }
 
     @Override
     public void addFriend(Optional<User> user, Optional<User> friend) {
-        final String sqlQuery = "insert into friends (user_id, friend_id) " +
-                "values (:user_id, :friend_id)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource map = new MapSqlParameterSource();
         map.addValue("user_id", user.get().getId());
         map.addValue("friend_id", friend.get().getId());
-        jdbcOperations.update(sqlQuery, map, keyHolder);
+        jdbcOperations.update(INSERT_INTO_FRIEND, map, keyHolder);
     }
 
     @Override
     public void deleteFriend(Optional<User> user, Optional<User> friend) {
-        final String sqlQuery = "delete from friends where user_id = :user_id and friend_id = :friend_id";
         MapSqlParameterSource map = new MapSqlParameterSource();
         map.addValue("user_id", user.get().getId());
         map.addValue("friend_id", friend.get().getId());
-        jdbcOperations.update(sqlQuery, map);
+        jdbcOperations.update(DELETE_FRIEND, map);
     }
 
     @Override
     public List<User> getAllCommonFriends(Optional<User> user, Optional<User> friend) {
-        final String sqlQuery = "select u.user_id, u.email, u.login, u.user_name, u.birthday " +
-                "from users as u " +
-                "inner join friends as f1 " +
-                "on u.user_id = f1.friend_id " +
-                "and f1.user_id = :user_id " +
-                "inner join friends as f2 " +
-                "on u.user_id = f2.friend_id " +
-                "and f2.user_id = :friend_id";
         MapSqlParameterSource map = new MapSqlParameterSource();
         map.addValue("user_id", user.get().getId());
         map.addValue("friend_id", friend.get().getId());
-        return jdbcOperations.query(sqlQuery, map, new UserRowMapper());
+        return jdbcOperations.query(SELECT_COMMON_FRIENDS, map, new UserRowMapper());
     }
 
     @Override
     public List<User> getFriends(Optional<User> user) {
-        final String sqlQuery = "select u.user_id, u.email, u.login, u.user_name, u.birthday " +
-                "from users as u " +
-                "inner join friends as f " +
-                "on u.user_id = f.friend_id " +
-                "and f.user_id = :user_id";
-        List<User> friends = jdbcOperations.query(sqlQuery, Map.of("user_id", user.get().getId()), new UserRowMapper());
+        List<User> friends = jdbcOperations.query(SELECT_FRIENDS, Map.of("user_id", user.get().getId()),
+                new UserRowMapper());
         return friends;
     }
 

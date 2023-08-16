@@ -4,16 +4,14 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 
-import lombok.*;
+
+import lombok.Data;
 import ru.yandex.practicum.filmorate.validator.ReleaseDateConstraint;
 
 import java.time.LocalDate;
 import java.util.Set;
 
-@Getter
-@Setter
-@ToString
-@EqualsAndHashCode
+@Data
 public class Film {
 
     private long id;
@@ -46,6 +44,15 @@ public class Film {
         this.mpa = mpa;
     }
 
+    public Film(String name, String description, LocalDate releaseDate, double duration, Integer rate, Mpa mpa) {
+        this.name = name;
+        this.description = description;
+        this.releaseDate = releaseDate;
+        this.duration = duration;
+        this.rate = rate;
+        this.mpa = mpa;
+    }
+
     public Film(String name, String description, LocalDate releaseDate, double duration, Integer rate) {
         this.name = name;
         this.description = description;
@@ -62,14 +69,5 @@ public class Film {
         this.rate = rate;
         this.mpa = mpa;
         this.genres = genres;
-    }
-
-    public Film(String name, String description, LocalDate releaseDate, double duration, Integer rate, Mpa mpa) {
-        this.name = name;
-        this.description = description;
-        this.releaseDate = releaseDate;
-        this.duration = duration;
-        this.rate = rate;
-        this.mpa = mpa;
     }
 }

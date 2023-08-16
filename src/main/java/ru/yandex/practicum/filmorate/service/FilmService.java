@@ -3,7 +3,7 @@ package ru.yandex.practicum.filmorate.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dao.FilmDbStorage;
+import ru.yandex.practicum.filmorate.dao.impl.FilmDbStorage;
 import ru.yandex.practicum.filmorate.dao.impl.GenreDaoImpl;
 import ru.yandex.practicum.filmorate.dao.impl.MpaDaoImpl;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -12,7 +12,9 @@ import ru.yandex.practicum.filmorate.model.Genres;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+
 
 @Service("filmService")
 public class FilmService {
@@ -33,14 +35,17 @@ public class FilmService {
         this.mpaDao = mpaDao;
     }
 
-    public Optional<Film> saveFilm(Film film) {
-        Optional<Film> newfilm = filmStorage.save(Optional.of(film));
-        return newfilm;
+    public Film saveFilm(Film film) {
+        final Optional<Film> newFilm = filmStorage.save(Optional.of(film));
+        if (newFilm.isEmpty()) {
+            throw new NotFoundException("Возвращается пустой объект.");
+        }
+        return newFilm.get();
     }
 
     public Film updateFilm(Film film) {
-        Optional<Film> newfilm = filmStorage.update(Optional.of(film));
-        if (newfilm.get() == null) {
+        final Optional<Film> newfilm = filmStorage.update(Optional.of(film));
+        if (newfilm == null) {
             throw new NotFoundException("Фильм с id = " + film.getId() + " не найден");
         }
         return newfilm.get();
@@ -51,9 +56,8 @@ public class FilmService {
     }
 
     public Film getById(long filmId) {
-        Film film = filmStorage.getById(filmId).orElseThrow(() ->
+        return filmStorage.getById(filmId).orElseThrow(() ->
                 new NotFoundException("Фильм с id " + filmId + " не найден"));
-        return film;
     }
 
     public void addLike(User user, Film film) {
@@ -65,49 +69,50 @@ public class FilmService {
     }
 
     public List<Film> getTopFilms(int count) {
-        List<Film> topFilms = filmStorage.getTopFilms(count);
+        final List<Film> topFilms = filmStorage.getTopFilms(count);
         if (topFilms.isEmpty()) {
-            new NotFoundException("Произошла ошибка во время поиска популярных фильмов");
+            throw new NotFoundException("Произошла ошибка во время поиска популярных фильмов");
         }
         return topFilms;
     }
 
     public List<Film> getAllFilms() {
-        List<Film> films = filmStorage.getAllFilms();
-        if (films.isEmpty()) {
-            new NotFoundException("Произошла ошибка во время поиска фильмов");
+        final List<Film> films = filmStorage.getAllFilms();
+        /*if (films.isEmpty()) {
+            throw new NullPointerException("Произошла ошибка во время поиска фильмов");
         }
+         */
         return films;
     }
 
     public List<Genres> getGenres() {
-        List<Genres> genres = genreDao.getAll();
+        final List<Genres> genres = genreDao.getAll();
         if (genres.isEmpty()) {
-            new NotFoundException("Произошла ошибка во время вывода жанров");
+            throw new NotFoundException("Произошла ошибка во время вывода жанров");
         }
         return genres;
     }
 
     public Genres getGenreById(long id) {
-        Genres genre = genreDao.getById(id);
+        final Genres genre = genreDao.getById(id);
         if (genre == null) {
-            new NotFoundException("Произошла ошибка во время вывода жанра по id = " + id);
+            throw new NotFoundException("Произошла ошибка во время вывода жанра по id = " + id);
         }
         return genre;
     }
 
     public List<Mpa> getAllMpa() {
-        List<Mpa> mpa = mpaDao.getAll();
+        final List<Mpa> mpa = mpaDao.getAll();
         if (mpa.isEmpty()) {
-            new NotFoundException("Произошла ошибка во время вывода рейтингов");
+            throw new NotFoundException("Произошла ошибка во время вывода рейтингов");
         }
         return mpa;
     }
 
     public Mpa getMpaById(long id) {
-        Mpa mpa = mpaDao.getById(id);
+        final Mpa mpa = mpaDao.getById(id);
         if (mpa == null) {
-            new NotFoundException("Произошла ошибка во время вывода рейтинга по id = " + id);
+            throw new NotFoundException("Произошла ошибка во время вывода рейтинга по id = " + id);
         }
         return mpa;
     }

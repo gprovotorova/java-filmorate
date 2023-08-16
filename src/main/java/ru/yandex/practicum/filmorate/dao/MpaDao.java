@@ -8,4 +8,5 @@ public interface MpaDao {
     Mpa getById(long id);
 
     List<Mpa> getAll();
+
 }

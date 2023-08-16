@@ -22,7 +22,8 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
 
 @RestController
 @Slf4j
@@ -55,9 +56,9 @@ public class FilmController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Optional<Film> create(@RequestBody @Valid Film film) {
+    public Film create(@RequestBody @Valid Film film) {
         log.debug("+ create: {}", film);
-        Optional<Film> savedFilm = filmService.saveFilm(film);
+        Film savedFilm = filmService.saveFilm(film);
         log.debug("+ create: {}", savedFilm);
         return savedFilm;
     }
