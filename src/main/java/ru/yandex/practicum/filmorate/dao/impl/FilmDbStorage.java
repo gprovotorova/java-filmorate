@@ -1,8 +1,7 @@
 package ru.yandex.practicum.filmorate.dao.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.RowMapper;
@@ -27,38 +26,39 @@ import java.util.Map;
 
 @Component("filmDbStorage")
 @RequiredArgsConstructor
+@Slf4j
 public class FilmDbStorage implements FilmStorage {
 
-    private static final String INSERT_INTO = "insert into films (film_name, film_description, release_date, " +
+    private static final String INSERT_FILM = "insert into films (film_name, film_description, release_date, " +
             "duration, rate, rating_id) values (:film_name, :film_description, :release_date, " +
             ":duration, :rate, :rating_id)";
-    private static final String UPDATE = "update films set film_name = :film_name, " +
-            "film_description = :film_description, release_date = :release_date, duration = :duration, rate = :rate, " +
-            "rating_id = :rating_id where film_id = :film_id";
-    private static final String DELETE = "delete from films where film_id = :film_id";
-    private static final String SELECT_BY_ID = "select f.film_id, f.film_name, f.film_description, f.release_date, " +
-            "f.duration, f.rate, f.rating_id, fr.rating_name from films as f left join films_rating as fr " +
+    private static final String UPDATE_FILM = "update films set film_name = :film_name, " +
+            "film_description = :film_description, release_date = :release_date, duration = :duration, " +
+            "rate = :rate, rating_id = :rating_id where film_id = :film_id";
+    private static final String DELETE_FILM = "delete from films where film_id = :film_id";
+    private static final String SELECT_FILM_BY_ID = "select f.film_id, f.film_name, f.film_description, " +
+            "f.release_date, f.duration, f.rate, f.rating_id, fr.rating_name " +
+            "from films as f " +
+            "left join films_rating as fr " +
             "on f.rating_id = fr.rating_id where film_id = :film_id";
     private static final String ADD_LIKE = "update films set film_name = :film_name, " +
-            "film_description = :film_description, release_date = :release_date, duration = :duration, rate = :rate, " +
-            "rating_id = :rating_id where film_id = :film_id";
+            "film_description = :film_description, release_date = :release_date, duration = :duration, " +
+            "rate = :rate, rating_id = :rating_id where film_id = :film_id";
     private static final String DELETE_LIKE = "update films set film_name = :film_name, " +
-            "film_description = :film_description, release_date = :release_date, duration = :duration, rate = :rate, " +
-            "rating_id = :rating_id where film_id = :film_id";
-    private static final String SELECT_TOP_FILMS = "select f.film_id, f.film_name, f.film_description, f.release_date, " +
-            "f.duration, f.rate, f.rating_id, fg.rating_name " +
+            "film_description = :film_description, release_date = :release_date, duration = :duration, " +
+            "rate = :rate, rating_id = :rating_id where film_id = :film_id";
+    private static final String SELECT_TOP_FILMS = "select f.film_id, f.film_name, f.film_description, " +
+            "f.release_date, f.duration, f.rate, f.rating_id, fg.rating_name " +
             "from films as f " +
             "left join films_rating as fg on f.rating_id = fg.rating_id " +
             "group by f.film_id " +
             "order by f.rate desc " +
             "limit :count";
-    private static final String SELECT_ALL = "select f.film_id, f.film_name, f.film_description, f.release_date, " +
-            "f.duration, f.rate, f.rating_id, fg.rating_name " +
+    private static final String SELECT_ALL_FILMS = "select f.film_id, f.film_name, f.film_description, " +
+            "f.release_date, f.duration, f.rate, f.rating_id, fg.rating_name " +
             "from films as f " +
             "left join films_rating as fg " +
             "on f.rating_id = fg.rating_id";
-
-    private final Logger log = LoggerFactory.getLogger(UserDbStorage.class);
 
     private final NamedParameterJdbcOperations jdbcOperations;
     @Qualifier("mpaDaoImpl")
@@ -70,62 +70,60 @@ public class FilmDbStorage implements FilmStorage {
     private final GenreDaoImpl genreDao;
 
     @Override
-    public Optional<Film> save(Optional<Film> film) {
-        if (film.isPresent()) {
+    public void save(Film film) {
+        if (film != null) {
             KeyHolder keyHolder = new GeneratedKeyHolder();
             MapSqlParameterSource map = new MapSqlParameterSource();
-            map.addValue("film_name", film.get().getName());
-            map.addValue("film_description", film.get().getDescription());
-            map.addValue("release_date", film.get().getReleaseDate());
-            map.addValue("duration", film.get().getDuration());
-            map.addValue("rate", film.get().getRate());
-            map.addValue("rating_id", film.get().getMpa().getId());
-            jdbcOperations.update(INSERT_INTO, map, keyHolder);
-            film.get().setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
-            if (film.get().getGenres() != null) {
-                genreDao.setGenres(film.get());
+            map.addValue("film_name", film.getName());
+            map.addValue("film_description", film.getDescription());
+            map.addValue("release_date", film.getReleaseDate());
+            map.addValue("duration", film.getDuration());
+            map.addValue("rate", film.getRate());
+            map.addValue("rating_id", film.getMpa().getId());
+            jdbcOperations.update(INSERT_FILM, map, keyHolder);
+            film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
+            if (film.getGenres() != null) {
+                genreDao.setGenres(film);
             }
             mpaDao.setMpa(film);
-            genreDao.loadFilmGenre(List.of(film.get()));
+            genreDao.loadFilmGenre(List.of(film));
         } else {
             throw new NullPointerException("Передан пустой объект.");
         }
-        return film;
     }
 
     @Override
-    public Optional<Film> update(Optional<Film> film) {
-        if (film.isPresent()) {
+    public void update(Film film) {
+        if (film != null) {
             MapSqlParameterSource map = new MapSqlParameterSource();
-            map.addValue("film_id", film.get().getId());
-            map.addValue("film_name", film.get().getName());
-            map.addValue("film_description", film.get().getDescription());
-            map.addValue("release_date", film.get().getReleaseDate());
-            map.addValue("duration", film.get().getDuration());
-            map.addValue("rate", film.get().getRate());
-            map.addValue("rating_id", film.get().getMpa().getId());
-            jdbcOperations.update(UPDATE, map);
-            if (film.get().getGenres() == null) {
-                film.get().setGenres(new HashSet<>());
-            } else if (film.get().getGenres().isEmpty()) {
-                genreDao.updateGenres(film.get());
-            } else if (film.get().getGenres() != null) {
-                genreDao.updateGenres(film.get());
+            map.addValue("film_id", film.getId());
+            map.addValue("film_name", film.getName());
+            map.addValue("film_description", film.getDescription());
+            map.addValue("release_date", film.getReleaseDate());
+            map.addValue("duration", film.getDuration());
+            map.addValue("rate", film.getRate());
+            map.addValue("rating_id", film.getMpa().getId());
+            jdbcOperations.update(UPDATE_FILM, map);
+            if (film.getGenres() == null) {
+                film.setGenres(new HashSet<>());
+            } else if (film.getGenres().isEmpty()) {
+                genreDao.updateGenres(film);
+            } else if (film.getGenres() != null) {
+                genreDao.updateGenres(film);
             }
             mpaDao.setMpa(film);
         } else {
             throw new NullPointerException("Передан пустой объект.");
         }
-        return film;
     }
 
     @Override
-    public void delete(Optional<Film> film) {
-        if (film.isPresent()) {
-            Long filmId = film.get().getId();
-            jdbcOperations.update(DELETE, Map.of("film_id", filmId));
-            if (!film.get().getGenres().isEmpty()) {
-                genreDao.deleteGenre(film.get());
+    public void delete(Film film) {
+        if (film != null) {
+            Long filmId = film.getId();
+            jdbcOperations.update(DELETE_FILM, Map.of("film_id", filmId));
+            if (!film.getGenres().isEmpty()) {
+                genreDao.deleteGenre(film);
             }
         } else {
             throw new NullPointerException("Передан пустой объект.");
@@ -134,30 +132,31 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Optional<Film> getById(long filmId) {
-        final List<Film> films = jdbcOperations.query(SELECT_BY_ID, Map.of("film_id", filmId), new FilmRowMapper());
+        final List<Film> films = jdbcOperations.query(SELECT_FILM_BY_ID, Map.of("film_id", filmId),
+                new FilmRowMapper());
         if (films.size() != 1 || films.isEmpty()) {
             log.info("Фильм с идентификатором {} не найден.", filmId);
             return Optional.empty();
         }
         for (Film film : films) {
-            mpaDao.setMpa(Optional.of(film));
+            mpaDao.setMpa(film);
         }
         genreDao.loadFilmGenre(films);
         return Optional.of(films.get(0));
     }
 
     @Override
-    public void addLike(Optional<User> user, Optional<Film> film) {
-        if (film.isPresent()) {
-            int rate = film.get().getRate() + 1;
+    public void addLike(User user, Film film) {
+        if (film != null && user != null) {
+            int rate = film.getRate() + 1;
             MapSqlParameterSource map = new MapSqlParameterSource();
-            map.addValue("film_id", film.get().getId());
-            map.addValue("film_name", film.get().getName());
-            map.addValue("film_description", film.get().getDescription());
-            map.addValue("release_date", film.get().getReleaseDate());
-            map.addValue("duration", film.get().getDuration());
+            map.addValue("film_id", film.getId());
+            map.addValue("film_name", film.getName());
+            map.addValue("film_description", film.getDescription());
+            map.addValue("release_date", film.getReleaseDate());
+            map.addValue("duration", film.getDuration());
             map.addValue("rate", rate);
-            map.addValue("rating_id", film.get().getMpa().getId());
+            map.addValue("rating_id", film.getMpa().getId());
             jdbcOperations.update(ADD_LIKE, map);
         } else {
             throw new NullPointerException("Переданы пустые объекты.");
@@ -165,17 +164,17 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public void deleteLike(Optional<User> user, Optional<Film> film) {
-        if (film.isPresent()) {
-            int rate = film.get().getRate() - 1;
+    public void deleteLike(User user, Film film) {
+        if (film != null && user != null) {
+            int rate = film.getRate() - 1;
             MapSqlParameterSource map = new MapSqlParameterSource();
-            map.addValue("film_id", film.get().getId());
-            map.addValue("film_name", film.get().getName());
-            map.addValue("film_description", film.get().getDescription());
-            map.addValue("release_date", film.get().getReleaseDate());
-            map.addValue("duration", film.get().getDuration());
+            map.addValue("film_id", film.getId());
+            map.addValue("film_name", film.getName());
+            map.addValue("film_description", film.getDescription());
+            map.addValue("release_date", film.getReleaseDate());
+            map.addValue("duration", film.getDuration());
             map.addValue("rate", rate);
-            map.addValue("rating_id", film.get().getMpa().getId());
+            map.addValue("rating_id", film.getMpa().getId());
             jdbcOperations.update(DELETE_LIKE, map);
         } else {
             throw new NullPointerException("Переданы пустые объекты.");
@@ -186,7 +185,7 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> getTopFilms(int count) {
         List<Film> films = jdbcOperations.query(SELECT_TOP_FILMS, Map.of("count", count), new FilmRowMapper());
         for (Film film : films) {
-            mpaDao.setMpa(Optional.of(film));
+            mpaDao.setMpa(film);
             genreDao.loadFilmGenre(List.of(film));
         }
         return films;
@@ -194,9 +193,9 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getAllFilms() {
-        List<Film> films = jdbcOperations.query(SELECT_ALL, new FilmRowMapper());
+        List<Film> films = jdbcOperations.query(SELECT_ALL_FILMS, new FilmRowMapper());
         for (Film film : films) {
-            mpaDao.setMpa(Optional.of(film));
+            mpaDao.setMpa(film);
             genreDao.loadFilmGenre(List.of(film));
         }
         return films;

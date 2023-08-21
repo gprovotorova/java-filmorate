@@ -28,16 +28,25 @@ public class UserService {
     }
 
     public User saveUser(User user) {
-        return userDbStorage.save(Optional.of(user)).get();
+        userDbStorage.save(user);
+        Optional<User> savedUser = userDbStorage.getById(user.getId());
+        if (savedUser == null) {
+            throw new NotFoundException("Возвращается пустой объект после сохранения пользователя.");
+        }
+        return savedUser.get();
     }
 
     public User updateUser(User user) {
-        userDbStorage.update(Optional.of(user));
+        userDbStorage.update(user);
+        final Optional<User> updatedUser = userDbStorage.getById(user.getId());
+        if (updatedUser == null) {
+            throw new NotFoundException("Пользователь с id = " + user.getId() + " не найден");
+        }
         return user;
     }
 
     public void deleteUser(User user) {
-        userDbStorage.delete(Optional.of(user));
+        userDbStorage.delete(user);
     }
 
     public List<User> getAllUsers() {
@@ -45,18 +54,18 @@ public class UserService {
     }
 
     public void addFriend(User user, User friend) {
-        userDbStorage.addFriend(Optional.of(user), Optional.of(friend));
+        userDbStorage.addFriend(user, friend);
     }
 
     public void deleteFriend(User user, User friend) {
-        userDbStorage.deleteFriend(Optional.of(user), Optional.of(friend));
+        userDbStorage.deleteFriend(user, friend);
     }
 
     public List<User> getAllCommonFriends(User user, User friend) {
-        return userDbStorage.getAllCommonFriends(Optional.of(user), Optional.of(friend));
+        return userDbStorage.getAllCommonFriends(user, friend);
     }
 
     public List<User> getFriends(User user) {
-        return userDbStorage.getFriends(Optional.of(user));
+        return userDbStorage.getFriends(user);
     }
 }

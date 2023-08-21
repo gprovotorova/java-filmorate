@@ -1,10 +1,17 @@
 package ru.yandex.practicum.filmorate.model;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.List;
 
 import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.*;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,13 +19,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.dao.impl.FilmDbStorage;
 import ru.yandex.practicum.filmorate.dao.impl.UserDbStorage;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class FilmDbStorageTest {
+
     @Autowired
     public FilmDbStorage filmStorage;
     @Autowired
@@ -28,34 +38,34 @@ public class FilmDbStorageTest {
     @Test
     @Order(1)
     public void createAndGetFilmById() {
-        Optional<Film> film = Optional.of(new Film("Унесённые призраками", "Шедевр Хаяо Миядзаки",
+        Film film = new Film("Унесённые призраками", "Шедевр Хаяо Миядзаки",
                 LocalDate.of(2001, 7, 20), 125, 5, new Mpa(2, "PG"),
-                new HashSet<>(Set.of(new Genres(3, "Мультфильм")))));
-        film = filmStorage.save(film);
-        assertEquals(film, filmStorage.getById(1));
+                new HashSet<>(Set.of(new Genres(3, "Мультфильм"))));
+        filmStorage.save(film);
+        assertEquals(film, filmStorage.getById(1).get());
     }
 
     @DisplayName("проверка обновления и возвращения фильма")
     @Test
     @Order(2)
     public void updateAndGetFilmById() {
-        Optional<Film> film = Optional.of(new Film("Леон - супер фильм!",
+        Film film = new Film("Леон - супер фильм!",
                 "Культовый триллер с Жаном Рено и Натали Портман.",
-                LocalDate.of(1994, 9, 14), 133, 0, new Mpa(4, "R"),
-                new HashSet<>(Set.of(new Genres(4, "Триллер"), new Genres(6, "Боевик")))));
+                LocalDate.of(1994, 9, 14), 133, 3, new Mpa(4, "R"),
+                new HashSet<>(Set.of(new Genres(6, "Боевик"))));
         filmStorage.save(film);
 
-        film.get().setName("Леон");
+        film.setName("Леон");
         filmStorage.update(film);
-        assertEquals(film, filmStorage.getById(2));
+        assertEquals(film, filmStorage.getById(2).get());
     }
 
     @DisplayName("проверка удаления фильма")
     @Test
     @Order(3)
     public void deleteFilmById() {
-        Optional<Film> filmDeleteCheck = Optional.of(new Film("name", "description",
-                LocalDate.of(1994, 9, 14), 133, 0, new Mpa(4, "R")));
+        Film filmDeleteCheck = new Film("name", "description",
+                LocalDate.of(1994, 9, 14), 133d, 0, new Mpa(1, "G"));
         filmStorage.save(filmDeleteCheck);
         filmStorage.delete(filmDeleteCheck);
         assertTrue(filmStorage.getById(3).isEmpty());
@@ -65,14 +75,14 @@ public class FilmDbStorageTest {
     @Test
     @Order(4)
     public void getAllFilms() {
-        Optional<Film> firstFilm = filmStorage.getById(1);
-        Optional<Film> secondFilm = Optional.of(new Film("Тутси",
+        Film firstFilm = filmStorage.getById(1).get();
+        Film secondFilm = filmStorage.getById(2).get();
+        Film thirdFilm = new Film("Тутси",
                 "Комедия с фееричным перевоплощением Дастина Хоффмана",
-                LocalDate.of(1982, 12, 1), 125, 3, new Mpa(2, "PG"),
-                new HashSet<>(Set.of(new Genres(1, "Комедия")))));
-        secondFilm = filmStorage.save(secondFilm);
-        Optional<Film> thirdFilm = filmStorage.getById(2);
-        List<Film> films = List.of(firstFilm.get(), thirdFilm.get(), secondFilm.get());
+                LocalDate.of(1982, 12, 1), 125, 0, new Mpa(2, "PG"));
+        filmStorage.save(thirdFilm);
+
+        List<Film> films = List.of(firstFilm, secondFilm, thirdFilm);
         assertNotNull(filmStorage.getAllFilms());
         assertEquals(films, filmStorage.getAllFilms());
     }
@@ -81,12 +91,12 @@ public class FilmDbStorageTest {
     @Test
     @Order(5)
     public void getTopFilms() {
-        Optional<Film> firstFilm = filmStorage.getById(1);
-        Optional<Film> secondFilm = filmStorage.getById(2);
-        Optional<Film> thirdFilm = filmStorage.getById(4);
+        Film firstFilm = filmStorage.getById(1).get();
+        Film secondFilm = filmStorage.getById(2).get();
+        Film thirdFilm = filmStorage.getById(4).get();
 
-        List<Film> filmOne = List.of(firstFilm.get());
-        List<Film> films = List.of(firstFilm.get(), thirdFilm.get(), secondFilm.get());
+        List<Film> filmOne = List.of(firstFilm);
+        List<Film> films = List.of(firstFilm, secondFilm, thirdFilm);
         assertEquals(filmOne, filmStorage.getTopFilms(1));
         assertEquals(films, filmStorage.getTopFilms(10));
     }
@@ -95,9 +105,9 @@ public class FilmDbStorageTest {
     @Test
     @Order(6)
     public void addAndDeleteLike() {
-        Optional<Film> film = filmStorage.getById(1);
-
-        Optional<User> user = userStorage.getById(1);
+        Film film = filmStorage.getById(1).get();
+        User user = new User("malina@mail.ru", "malina", "Алина Михайлова",
+                LocalDate.of(2004, 2, 1));
 
         filmStorage.addLike(user, film);
         assertEquals(6, filmStorage.getById(1).get().getRate());

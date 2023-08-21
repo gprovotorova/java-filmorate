@@ -36,23 +36,25 @@ public class FilmService {
     }
 
     public Film saveFilm(Film film) {
-        final Optional<Film> newFilm = filmStorage.save(Optional.of(film));
-        if (newFilm.isEmpty()) {
-            throw new NotFoundException("Возвращается пустой объект.");
+        filmStorage.save(film);
+        Optional<Film> savedFilm = filmStorage.getById(film.getId());
+        if (savedFilm == null) {
+            throw new NotFoundException("Возвращается пустой объект после сохранения фильма.");
         }
-        return newFilm.get();
+        return savedFilm.get();
     }
 
     public Film updateFilm(Film film) {
-        final Optional<Film> newfilm = filmStorage.update(Optional.of(film));
-        if (newfilm == null) {
+        filmStorage.update(film);
+        final Optional<Film> updatedFilm = filmStorage.getById(film.getId());
+        if (updatedFilm == null) {
             throw new NotFoundException("Фильм с id = " + film.getId() + " не найден");
         }
-        return newfilm.get();
+        return updatedFilm.get();
     }
 
     public void deleteFilm(Film film) {
-        filmStorage.delete(Optional.of(film));
+        filmStorage.delete(film);
     }
 
     public Film getById(long filmId) {
@@ -61,11 +63,11 @@ public class FilmService {
     }
 
     public void addLike(User user, Film film) {
-        filmStorage.addLike(Optional.of(user), Optional.of(film));
+        filmStorage.addLike(user, film);
     }
 
     public void deleteLike(User user, Film film) {
-        filmStorage.deleteLike(Optional.of(user), Optional.of(film));
+        filmStorage.deleteLike(user, film);
     }
 
     public List<Film> getTopFilms(int count) {
@@ -78,10 +80,6 @@ public class FilmService {
 
     public List<Film> getAllFilms() {
         final List<Film> films = filmStorage.getAllFilms();
-        /*if (films.isEmpty()) {
-            throw new NullPointerException("Произошла ошибка во время поиска фильмов");
-        }
-         */
         return films;
     }
 

@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.model;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.*;
@@ -27,30 +26,30 @@ class UserDbStorageTest {
     @Test
     @Order(1)
     public void createAndGetUserById() {
-        Optional<User> user = Optional.of(new User("malina@mail.ru", "malina", "Алина Михайлова",
-                LocalDate.of(2004, 2, 1)));
+        User user = new User("malina@mail.ru", "malina", "Алина Михайлова",
+                LocalDate.of(2004, 2, 1));
         userStorage.save(user);
-        assertEquals(user, userStorage.getById(1));
+        assertEquals(user, userStorage.getById(1).get());
     }
 
     @DisplayName("проверка обновления и возвращения пользователя")
     @Test
     @Order(2)
     public void updateAndGetUserById() {
-        Optional<User> user = Optional.of(new User("petrov@mail.ru", "new user", "Иван Петров",
-                LocalDate.of(1991, 5, 2)));
+        User user = new User("petrov@mail.ru", "new user", "Иван Петров",
+                LocalDate.of(1991, 5, 2));
         userStorage.save(user);
 
-        user.get().setLogin("petrov");
+        user.setLogin("petrov");
         userStorage.update(user);
-        assertEquals(user, userStorage.getById(2));
+        assertEquals(user, userStorage.getById(2).get());
     }
 
     @DisplayName("проверка удаления пользователя")
     @Test
     @Order(3)
     public void deleteUserById() {
-        Optional<User> userUpdate = userStorage.getById(2);
+        User userUpdate = userStorage.getById(2).get();
         userStorage.delete(userUpdate);
         assertTrue(userStorage.getById(2).isEmpty());
     }
@@ -59,14 +58,14 @@ class UserDbStorageTest {
     @Test
     @Order(4)
     public void getAllUsers() {
-        Optional<User> firstUser = userStorage.getById(1);
-        Optional<User> secondUser = Optional.of(new User("hello@mail.ru", "hello", "Мария Иванова",
-                LocalDate.of(2000, 8, 5)));
+        User firstUser = userStorage.getById(1).get();
+        User secondUser = new User("hello@mail.ru", "hello", "Мария Иванова",
+                LocalDate.of(2000, 8, 5));
         userStorage.save(secondUser);
-        Optional<User> thirdUser = Optional.of(new User("petrov@mail.ru", "petrov", "Иван Петров",
-                LocalDate.of(1991, 5, 2)));
+        User thirdUser = new User("petrov@mail.ru", "petrov", "Иван Петров",
+                LocalDate.of(1991, 5, 2));
         userStorage.save(thirdUser);
-        List<User> users = List.of(firstUser.get(), secondUser.get(), thirdUser.get());
+        List<User> users = List.of(firstUser, secondUser, thirdUser);
         assertNotNull(userStorage.getAllUsers());
         assertEquals(users, userStorage.getAllUsers());
     }
@@ -75,11 +74,11 @@ class UserDbStorageTest {
     @Test
     @Order(5)
     public void addAndDeleteFriend() {
-        Optional<User> firstUser = userStorage.getById(1);
-        Optional<User> thirdUser = userStorage.getById(3);
+        User firstUser = userStorage.getById(1).get();
+        User thirdUser = userStorage.getById(3).get();
 
         userStorage.addFriend(firstUser, thirdUser);
-        assertEquals(List.of(thirdUser.get()), userStorage.getFriends(firstUser));
+        assertEquals(List.of(thirdUser), userStorage.getFriends(firstUser));
 
         userStorage.deleteFriend(firstUser, thirdUser);
         assertTrue(userStorage.getFriends(firstUser).isEmpty());
@@ -89,12 +88,12 @@ class UserDbStorageTest {
     @Test
     @Order(6)
     public void getCommonFriends() {
-        Optional<User> firstUser = userStorage.getById(1);
-        Optional<User> secondUser = userStorage.getById(3);
-        Optional<User> thirdUser = userStorage.getById(4);
+        User firstUser = userStorage.getById(1).get();
+        User secondUser = userStorage.getById(3).get();
+        User thirdUser = userStorage.getById(4).get();
 
         userStorage.addFriend(firstUser, secondUser);
         userStorage.addFriend(thirdUser, secondUser);
-        assertEquals(List.of(secondUser.get()), userStorage.getAllCommonFriends(thirdUser, firstUser));
+        assertEquals(List.of(secondUser), userStorage.getAllCommonFriends(thirdUser, firstUser));
     }
 }

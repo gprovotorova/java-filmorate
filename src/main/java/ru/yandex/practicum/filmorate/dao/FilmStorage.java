@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface FilmStorage {
-    Optional<Film> save(Optional<Film> film);
+    void save(Film film);
 
-    Optional<Film> update(Optional<Film> film);
+    void update(Film film);
 
-    void delete(Optional<Film> film);
+    void delete(Film film);
 
     Optional<Film> getById(long id);
 
@@ -19,7 +19,7 @@ public interface FilmStorage {
 
     List<Film> getTopFilms(int count);
 
-    void deleteLike(Optional<User> user, Optional<Film> film);
+    void deleteLike(User user, Film film);
 
-    void addLike(Optional<User> user, Optional<Film> film);
+    void addLike(User user, Film film);
 }
