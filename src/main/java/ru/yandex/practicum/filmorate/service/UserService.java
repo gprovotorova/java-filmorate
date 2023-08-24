@@ -1,19 +1,16 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dao.impl.UserDbStorage;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service("userService")
 public class UserService {
 
-    @Qualifier("userDbStorage")
     private final UserDbStorage userDbStorage;
 
     @Autowired
@@ -22,27 +19,20 @@ public class UserService {
     }
 
     public User getById(long userId) {
-        final User user = userDbStorage.getById(userId).orElseThrow(() ->
-                new NotFoundException("Пользователь с id " + userId + " не найден"));
-        return user;
+        return userDbStorage.getById(userId).orElseThrow(() ->
+                new ObjectNotFoundException("Пользователь с id " + userId + " не найден"));
     }
 
     public User saveUser(User user) {
         userDbStorage.save(user);
-        Optional<User> savedUser = userDbStorage.getById(user.getId());
-        if (savedUser == null) {
-            throw new NotFoundException("Возвращается пустой объект после сохранения пользователя.");
-        }
-        return savedUser.get();
+        return userDbStorage.getById(user.getId()).orElseThrow(() ->
+                new ObjectNotFoundException("Возвращается пустой объект после сохранения пользователя."));
     }
 
     public User updateUser(User user) {
         userDbStorage.update(user);
-        final Optional<User> updatedUser = userDbStorage.getById(user.getId());
-        if (updatedUser == null) {
-            throw new NotFoundException("Пользователь с id = " + user.getId() + " не найден");
-        }
-        return user;
+        return userDbStorage.getById(user.getId()).orElseThrow(() ->
+                new ObjectNotFoundException("Пользователь с id = " + user.getId() + " не найден"));
     }
 
     public void deleteUser(User user) {

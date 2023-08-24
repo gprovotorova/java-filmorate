@@ -4,7 +4,6 @@ import javax.validation.Valid;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -31,9 +30,7 @@ import java.util.ArrayList;
 @Validated
 public class FilmController {
 
-    @Qualifier("filmService")
     private final FilmService filmService;
-    @Qualifier("userService")
     private final UserService userService;
 
     @Autowired
@@ -50,7 +47,7 @@ public class FilmController {
 
     @GetMapping("/{filmId}")
     public Film getFilmById(@PathVariable("filmId") int filmId) {
-        log.debug("+ getFilmById: {}", filmService.getById(filmId));
+        log.debug("+ getFilmById: {}", filmId);
         return filmService.getById(filmId);
     }
 
@@ -66,7 +63,6 @@ public class FilmController {
     @PutMapping
     public Film put(@RequestBody @Valid Film film) {
         log.debug("+ put: {}", film);
-        filmService.getById(film.getId());
         Film savedFilm = filmService.updateFilm(film);
         log.debug("+ put: {}", savedFilm);
         return savedFilm;

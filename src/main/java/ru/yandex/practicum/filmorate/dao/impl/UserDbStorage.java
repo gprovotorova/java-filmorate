@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.dao.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -11,8 +10,6 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dao.UserStorage;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -49,6 +46,8 @@ public class UserDbStorage implements UserStorage {
             "inner join friends as f " +
             "on u.user_id = f.friend_id and f.user_id = :user_id";
 
+    private static final String DELETE_ALL = "delete from users";
+
     private final NamedParameterJdbcOperations jdbcOperations;
 
     @Override
@@ -81,7 +80,12 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public Optional<User> getById(long id) {
-        final List<User> users = jdbcOperations.query(SELECT_USER_BY_ID, Map.of("user_id", id), new UserRowMapper());
+        final List<User> users = jdbcOperations.query(SELECT_USER_BY_ID, Map.of("user_id", id),
+                (rs, i) -> new User(rs.getLong("user_id"),
+                        rs.getString("email"),
+                        rs.getString("login"),
+                        rs.getString("user_name"),
+                        rs.getDate("birthday").toLocalDate()));
         if (users.size() != 1 || users.isEmpty()) {
             log.info("Пользователь с идентификатором {} не найден.", id);
             return Optional.empty();
@@ -91,7 +95,11 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> getAllUsers() {
-        return jdbcOperations.query(SELECT_ALL_USERS, new UserRowMapper());
+        return jdbcOperations.query(SELECT_ALL_USERS, (rs, i) -> new User(rs.getLong("user_id"),
+                rs.getString("email"),
+                rs.getString("login"),
+                rs.getString("user_name"),
+                rs.getDate("birthday").toLocalDate()));
     }
 
     @Override
@@ -125,25 +133,16 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> getFriends(User user) {
-        List<User> friends = jdbcOperations.query(SELECT_FRIENDS_OF_USER, Map.of("user_id", user.getId()),
+        return jdbcOperations.query(SELECT_FRIENDS_OF_USER, Map.of("user_id", user.getId()),
                 (rs, i) -> new User(rs.getLong("user_id"),
                         rs.getString("email"),
                         rs.getString("login"),
                         rs.getString("user_name"),
                         rs.getDate("birthday").toLocalDate()));
-        return friends;
     }
 
-    private static class UserRowMapper implements RowMapper<User> {
-        @Override
-        public User mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new User(rs.getLong("user_id"),
-                    rs.getString("email"),
-                    rs.getString("login"),
-                    rs.getString("user_name"),
-                    rs.getDate("birthday").toLocalDate()
-            );
-        }
+    public void deleteAll() {
+        jdbcOperations.update(DELETE_ALL, Map.of());
     }
 }
 

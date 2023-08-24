@@ -5,24 +5,22 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.dao.impl.MpaDaoImpl;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-public class MpaDaoTest {
+public class MpaDaoTest extends AbstractTest {
     @Autowired
     public MpaDaoImpl mpaDao;
 
     @DisplayName("проверка получения одного рейтинга")
     @Test
     public void getById() {
-        Mpa mpaDB = mpaDao.getById(3);
+        Mpa mpaDB = mpaDao.getById(3).get();
         Mpa mpaCheck = new Mpa(3, "PG-13");
         assertEquals(mpaCheck, mpaDB);
     }

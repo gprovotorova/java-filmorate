@@ -5,23 +5,22 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.dao.GenreDao;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genres;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.ResultSet;
-
-import java.util.Map;
 import java.util.List;
+import java.util.Optional;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.HashSet;
+import java.util.Map;
+
 
 @Component("genreDaoImpl")
 @RequiredArgsConstructor
@@ -35,6 +34,7 @@ public class GenreDaoImpl implements GenreDao {
     private static final String DELETE_FILMS_GENRE = "delete from films_genre " +
             "where film_id = ? and genre_id = ?";
     private static final String DELETE_GENRE = "delete from films_genre where film_id = :film_id";
+    private static final String DELETE_ALL = "delete from films_genre";
     private static final String SELECT_GENRES_BY_IDS = "select fg.film_id, fg.genre_id, g.genre_name " +
             "from films_genre as fg " +
             "left join genres as g " +
@@ -47,18 +47,20 @@ public class GenreDaoImpl implements GenreDao {
     JdbcTemplate jdbcTemplate;
 
     @Override
-    public Genres getById(long id) {
-        final List<Genres> genre = jdbcOperations.query(SELECT_BY_ID, Map.of("genre_id", id), new GenreRowMapper());
+    public Optional<Genres> getById(long id) {
+        final List<Genres> genre = jdbcOperations.query(SELECT_BY_ID, Map.of("genre_id", id), (rs, i) ->
+                new Genres(rs.getLong("genre_id"), rs.getString("genre_name")));
         if (genre.size() != 1 || genre.isEmpty()) {
-            log.info("Жанр с идентификатором {} не найден.", id);
-            throw new NotFoundException("Жанр с идентификатором " + id + " не найден.");
+            log.debug("Жанр с идентификатором {} не найден.", id);
+            throw new ObjectNotFoundException("Жанр с идентификатором " + id + " не найден.");
         }
-        return genre.get(0);
+        return Optional.of(genre.get(0));
     }
 
     @Override
     public List<Genres> getAll() {
-        return jdbcOperations.query(SELECT_ALL, new GenreRowMapper());
+        return jdbcOperations.query(SELECT_ALL, (rs, i) ->
+                new Genres(rs.getLong("genre_id"), rs.getString("genre_name")));
     }
 
     public void loadFilmGenre(List<Film> films) {
@@ -67,8 +69,8 @@ public class GenreDaoImpl implements GenreDao {
             ids.add(film.getId());
         }
         for (Long id : ids) {
-            final List<Genres> genres = jdbcOperations.query(SELECT_GENRES_BY_IDS, Map.of("film_id", id),
-                    new GenreRowMapper());
+            final List<Genres> genres = jdbcOperations.query(SELECT_GENRES_BY_IDS, Map.of("film_id", id), (rs, i) ->
+                    new Genres(rs.getLong("genre_id"), rs.getString("genre_name")));
             for (Film film : films) {
                 film.setGenres(new HashSet<>(genres));
             }
@@ -83,58 +85,36 @@ public class GenreDaoImpl implements GenreDao {
         }
         List<Long> idsFormDatabase = new ArrayList<>();
         List<Genres> genresDatabase = jdbcOperations.query(SELECT_GENRES_BY_IDS, Map.of("film_id", film.getId()),
-                new GenreRowMapper());
+                (rs, i) -> new Genres(rs.getLong("genre_id"), rs.getString("genre_name")));
         for (Genres genreDB : genresDatabase) {
             idsFormDatabase.add(genreDB.getId());
         }
-        List<Long> mismatchedIdsForAdd = new ArrayList<>();
+        List<Long> mismatchedIdsAdd = new ArrayList<>();
         if (ids.size() > idsFormDatabase.size()) {
             for (Long id : ids) {
                 for (Long idDb : idsFormDatabase) {
                     if (id != idDb) {
-                        mismatchedIdsForAdd.add(id);
+                        mismatchedIdsAdd.add(id);
                     }
                 }
             }
-            jdbcTemplate.batchUpdate(INSERT_INTO_FILMS_GENRE, new BatchPreparedStatementSetter() {
-                @Override
-                public void setValues(PreparedStatement ps, int i) throws SQLException {
-                    ps.setLong(1, film.getId());
-                    ps.setLong(2, mismatchedIdsForAdd.get(i));
-                }
-
-                @Override
-                public int getBatchSize() {
-                    return mismatchedIdsForAdd.size();
-                }
-            });
+            batchOperations(INSERT_INTO_FILMS_GENRE, film, mismatchedIdsAdd);
         }
 
-        List<Long> mismatchedIdsForDelete = new ArrayList<>();
+        List<Long> mismatchedIdsDelete = new ArrayList<>();
         if (ids.size() < idsFormDatabase.size()) {
             for (Long idDb : idsFormDatabase) {
                 if (ids.isEmpty()) {
-                    mismatchedIdsForDelete.add(idDb);
+                    mismatchedIdsDelete.add(idDb);
                 } else {
                     for (Long id : ids) {
                         if (idDb != id) {
-                            mismatchedIdsForDelete.add(idDb);
+                            mismatchedIdsDelete.add(idDb);
                         }
                     }
                 }
             }
-            jdbcTemplate.batchUpdate(DELETE_FILMS_GENRE, new BatchPreparedStatementSetter() {
-                @Override
-                public void setValues(PreparedStatement ps, int i) throws SQLException {
-                    ps.setLong(1, film.getId());
-                    ps.setLong(2, mismatchedIdsForDelete.get(i));
-                }
-
-                @Override
-                public int getBatchSize() {
-                    return mismatchedIdsForDelete.size();
-                }
-            });
+            batchOperations(DELETE_FILMS_GENRE, film, mismatchedIdsDelete);
         }
         setGenres(film);
     }
@@ -149,7 +129,15 @@ public class GenreDaoImpl implements GenreDao {
             film.setGenres(new HashSet<>());
             return;
         }
-        jdbcTemplate.batchUpdate(INSERT_INTO_FILMS_GENRE, new BatchPreparedStatementSetter() {
+        batchOperations(INSERT_INTO_FILMS_GENRE, film, ids);
+    }
+
+    public void deleteGenre(Film film) {
+        jdbcOperations.update(DELETE_GENRE, Map.of("film_id", film.getId()));
+    }
+
+    public void batchOperations(String sql, Film film, List<Long> ids) {
+        jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 ps.setLong(1, film.getId());
@@ -163,16 +151,7 @@ public class GenreDaoImpl implements GenreDao {
         });
     }
 
-    public void deleteGenre(Film film) {
-        jdbcOperations.update(DELETE_GENRE, Map.of("film_id", film.getId()));
-    }
-
-    private static class GenreRowMapper implements RowMapper<Genres> {
-        @Override
-        public Genres mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new Genres(rs.getLong("genre_id"),
-                    rs.getString("genre_name")
-            );
-        }
+    public void deleteAll() {
+        jdbcOperations.update(DELETE_ALL, Map.of());
     }
 }
