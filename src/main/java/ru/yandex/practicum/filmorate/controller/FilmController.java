@@ -22,7 +22,6 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.List;
-import java.util.ArrayList;
 
 @RestController
 @Slf4j
@@ -41,8 +40,9 @@ public class FilmController {
 
     @GetMapping
     public List<Film> getFilms() {
-        log.debug("+ getFilms {}", filmService.getAllFilms().size());
-        return new ArrayList<>(filmService.getAllFilms());
+        List<Film> films = filmService.getAllFilms();
+        log.debug("+ getFilms {}", films.size());
+        return films;
     }
 
     @GetMapping("/{filmId}")
@@ -96,9 +96,9 @@ public class FilmController {
 
     @GetMapping(value = {"/popular?count={count}", "/popular"})
     public List<Film> getTopFilms(@RequestParam(value = "count", required = false, defaultValue = "10") int count) {
-        log.debug("+ getTopFilms: {}", getFilms().size());
+        log.debug("+ getTopFilms: {}", count);
         List<Film> topFilms = filmService.getTopFilms(count);
-        log.debug("+ getTopFilms: {}", getFilms().size());
+        log.debug("+ getTopFilms: {}", topFilms);
         return topFilms;
     }
 }
