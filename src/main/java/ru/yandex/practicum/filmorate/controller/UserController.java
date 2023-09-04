@@ -39,8 +39,9 @@ public class UserController {
 
     @GetMapping
     public List<User> getUsers() {
-        log.debug("+ getUsers: {}", userService.getAllUsers().size());
-        return userService.getAllUsers();
+        List<User> users = userService.getAllUsers();
+        log.debug("+ getUsers: {}", users.size());
+        return users;
     }
 
     @GetMapping("/{userId}")
@@ -77,7 +78,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public void putFriend(@PathVariable("id") int userId, @PathVariable("friendId") int friendId) {
+    public void addFriend(@PathVariable("id") int userId, @PathVariable("friendId") int friendId) {
         User user = userService.getById(userId);
         User friend = userService.getById(friendId);
         log.debug("+ putFriend: {}", friend);
@@ -99,7 +100,7 @@ public class UserController {
         User user = userService.getById(userId);
         log.debug("+ getFriends: {}", user);
         List<User> friends = userService.getFriends(user);
-        log.debug("+ getFriends: {}", userService.getFriends(user));
+        log.debug("+ getFriends: {}", friends);
         return friends;
     }
 
@@ -109,7 +110,7 @@ public class UserController {
         User friend = userService.getById(friendId);
         log.debug("+ getCommonFriends: {} and {}", user, friend);
         List<User> commonFriends = userService.getAllCommonFriends(user, friend);
-        log.debug("+ getCommonFriends: {}", userService.getAllCommonFriends(user, friend));
+        log.debug("+ getCommonFriends: {}", commonFriends);
         return commonFriends;
     }
 }
