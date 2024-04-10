@@ -1,6 +1,54 @@
-# java-filmorate
+# Filmorate
 
-Template repository for Filmorate project.
+Это бэкенд для сервиса, который работает с фильмами и оценками пользователей, а также возвращает топ-5 фильмов, рекомендованных к просмотру. 
+
+____
+Технологический стек: 
+* Java 11
+* Spring Boot
+* JDBCTemplate
+* H2
+* Spring Boot Test
+* Lombok
+____
+
+В проекте реализованы следующие **классы-контроллеры**:
+* FilmController обслуживает фильмы
+* UserController – пользователей
+* GenreController – жанры
+* MpaController – категории 
+В классах-контроллерах имеются эндпоинты с подходящим типом запроса для каждого из случаев.
+
+Для FilmController:
+* POST /films - добавление фильма;
+* PUT /films - обновление фильма;
+* GET /films - получение всех фильмов;
+* GET /films/{filmId} – получение фильма по идентификатору;
+* DELETE /films/{filmId} – удаление фильма;
+* PUT /films/{id}/like/{userId} — пользователь ставит лайк фильму;
+* DELETE /films/{id}/like/{userId} — пользователь удаляет лайк;
+* GET /films/popular?count={count}&genreId={genreId}&year={year} — возвращает список из первых count фильмов по количеству лайков. Если значение параметра count не задано, вернутся первые 10. Фильтрация осуществляется по двум параметрам: по жанру, за указанный год.
+* GET /films/common?userId={userId}&friendId={friendId} - возвращает список фильмов, отсортированных по популярности. Параметры: userId — идентификатор пользователя, запрашивающего информацию; friendId — идентификатор пользователя, с которым необходимо сравнить список фильмов.
+
+Для UserController:
+* POST /users - создание пользователя;
+* PUT /users - обновление пользователя;
+* DELETE /users/{userId} – удаление пользователя;
+* GET /users/{userId} - получение данных о конкретном пользователе;
+* GET /users - получение списка всех пользователей;
+* PUT /users/{id}/friends/{friendId} — добавление в друзья;
+* DELETE /users/{id}/friends/{friendId} — удаление из друзей;
+* GET /users/{id}/friends — возвращает список пользователей, являющихся его друзьями;
+* GET /users/{id}/friends/common/{otherId} — список друзей, общих с другим пользователем.
+
+Для MpaController:
+* GET /mpa – получение всех категорий MPA;
+* GET /mpa/{id} – получение категории по идентификатору. 
+Для GenreController:
+* GET /genres – получение списка всех жанров;
+* GET /genres/{id} – получение жанра по идентификатору.
+
+____
 
 ![Схема БД](schema.png)
 
